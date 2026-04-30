@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git ls-tree *)",
+      "Bash(ls -d .worktrees)",
+      "Bash(ls -d worktrees)",
+      "Bash(git worktree *)",
+      "Bash(pip --version)",
+      "Bash(pytest -q)",
+      "Bash(git commit*)",
+      "Bash(git add*)",
+      "Bash(git branch *)",
+      "Bash(git stash *)",
+      "Bash(schtasks /Create /?)",
+      "PowerShell(schtasks *)",
+      "PowerShell(Get-ScheduledTask *)",
+      "Read(//c/Users/ab550/OneDrive/Desktop/**)",
+      "Read(//c/Users/ab550/**)",
+      "Bash(where ISCC)",
+      "Bash(where iscc *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(cd C:\\\\Users\\\\ab550\\\\OneDrive\\\\Desktop\\\\proj_WindowsContext; python -c \"import os; print\\('PY APPDATA:', os.environ.get\\('APPDATA'\\)\\); from pathlib import Path; p=Path\\(os.environ['APPDATA']\\)/'WinLayoutSaver'/'config.json'; print\\('path:',p\\); print\\('exists:',p.exists\\(\\)\\); print\\('---'\\); print\\(p.read_text\\(encoding='utf-8'\\) if p.exists\\(\\) else 'N/A'\\)\"; Write-Output \"===\"; Write-Output \"PS APPDATA: $env:APPDATA\"; cmd /c dir \"$env:APPDATA\\\\WinLayoutSaver\" 2>&1)",
+      "PowerShell(Get-WmiObject *)",
+      "PowerShell(dir \"$env:APPDATA\\\\WinLayoutSaver\\\\logs\" /OD /B 2>&1 | findstr /R \"rollback-\")",
+      "Bash(git *)",
+      "Bash(echo \"exit:$?\")"
+    ]
+  }
+}
