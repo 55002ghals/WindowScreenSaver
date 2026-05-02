@@ -368,36 +368,57 @@ class WinLayoutSaverApp(tk.Tk):
         config = storage.load_config()
         ar = config.setdefault("auto_rollback", {})
         new_enabled = not ar.get("enabled", False)
-        ar["enabled"] = new_enabled
         ar["layout_name"] = self._ar_layout_var.get()
         ar["mode"] = self._ar_mode_var.get()
         try:
             ar["startup_delay_seconds"] = int(self._delay_var.get())
         except ValueError:
             ar["startup_delay_seconds"] = 10
-        storage.save_config(config)
-        self._apply_ar_toggle_style(new_enabled)
-        logger.info("auto-rollback %s for '%s'", "enabled" if new_enabled else "disabled", ar["layout_name"])
-        # Frozen (PyInstaller) → use bundled WinLayoutSaverRollback.exe directly.
-        # Otherwise → invoke pythonw on cli/rollback.py.
+
+        # Resolve scheduler args for current execution mode (frozen vs dev).
         if getattr(sys, "frozen", False):
-            rollback_exe = str(Path(sys.executable).with_name("WinLayoutSaverRollback.exe"))
-            if new_enabled:
-                scheduler.register(
-                    script_path="",
-                    delay_seconds=ar.get("startup_delay_seconds", 10),
-                    python_exe=rollback_exe,
-                )
-            else:
-                scheduler.unregister()
+            script_path = ""
+            python_exe = str(Path(sys.executable).with_name("WinLayoutSaverRollback.exe"))
         else:
             script_path = str(Path(__file__).parent.parent / "cli" / "rollback.py")
-            if new_enabled:
-                scheduler.register(script_path=script_path, delay_seconds=ar.get("startup_delay_seconds", 10))
-            else:
-                scheduler.unregister()
+            python_exe = None
+
+        if new_enabled:
+            ok = scheduler.register(
+                script_path=script_path,
+                delay_seconds=ar.get("startup_delay_seconds", 10),
+                python_exe=python_exe,
+            )
+            if not ok:
+                logger.error("auto-rollback enable FAILED for '%s' — task not registered", ar["layout_name"])
+                ar["enabled"] = False
+                storage.save_config(config)
+                self._apply_ar_toggle_style(False)
+                messagebox.showerror(
+                    t("app_title"),
+                    t("register_failed_msg").format(log_dir=str(LOGS_DIR)),
+                )
+                return
+            ar["enabled"] = True
+            storage.save_config(config)
+            self._apply_ar_toggle_style(True)
+            logger.info("auto-rollback enabled for '%s'", ar["layout_name"])
+        else:
+            ok = scheduler.unregister()
+            ar["enabled"] = False
+            storage.save_config(config)
+            self._apply_ar_toggle_style(False)
+            logger.info("auto-rollback disabled for '%s'", ar["layout_name"])
+            if not ok:
+                messagebox.showwarning(
+                    t("app_title"),
+                    t("register_failed_msg").format(log_dir=str(LOGS_DIR)),
+                )
 
     def _on_run_now(self):
+        if not scheduler.task_exists():
+            messagebox.showerror(t("app_title"), t("run_now_not_registered_msg"))
+            return
         ok, msg = scheduler.run_now()
         if ok:
             messagebox.showinfo(t("app_title"), t("run_now_success_msg"))
@@ -437,6 +458,10 @@ class WinLayoutSaverApp(tk.Tk):
             logger.info("scheduler: migration complete (v14)")
         else:
             logger.warning("scheduler: migration failed — will retry on next launch")
+            try:
+                self._status_var.set(t("migrate_failed_status"))
+            except Exception:
+                pass
 
     def _on_mode_change(self):
         """모드 Radio 버튼 클릭 시 설명 Label을 갱신한다."""

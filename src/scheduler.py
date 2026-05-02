@@ -100,6 +100,15 @@ def _build_register_ps(python_exe: str, script_path: str, delay_seconds: int, us
     )
 
 
+def task_exists() -> bool:
+    """Returns True iff WinLayoutSaver_Rollback is currently registered."""
+    result = subprocess.run(
+        ["schtasks.exe", "/Query", "/TN", TASK_NAME],
+        capture_output=True,
+    )
+    return result.returncode == 0
+
+
 def register(script_path: str, delay_seconds: int = 10, python_exe: str = None) -> bool:
     """
     Register WinLayoutSaver_Rollback in Windows Task Scheduler.
@@ -107,12 +116,20 @@ def register(script_path: str, delay_seconds: int = 10, python_exe: str = None) 
     No admin rights needed (RunLevel=Limited, per-user AtLogOn trigger).
     Returns True on success.
     """
+    if script_path and not Path(script_path).exists():
+        logger.error("scheduler: script_path does not exist: %s", script_path)
+        return False
+
     if python_exe is None:
         python_dir = Path(sys.executable).parent
         pythonw = python_dir / "pythonw.exe"
         if not pythonw.exists():
             pythonw = Path(sys.executable)  # fallback
         python_exe = str(pythonw)
+
+    if not script_path and not Path(python_exe).exists():
+        logger.error("scheduler: rollback exe missing: %s", python_exe)
+        return False
 
     python_exe = _find_executable_for_scheduler(python_exe)
 
