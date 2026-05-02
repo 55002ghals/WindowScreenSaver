@@ -60,7 +60,7 @@
 **Recommended — installer:**
 
 1. [Releases](https://github.com/55002ghals/WindowScreenSaver/releases) 에서 `WinLayoutSaverSetup.exe` 다운로드
-2. 실행 — 관리자 권한 필요 없음 (`%LOCALAPPDATA%\Programs\WinLayoutSaver` 에 사용자 단위 설치)
+2. `WinLayoutSaverSetup.exe` 실행
 3. 시작 메뉴에서 **WinLayoutSaver** 실행
 
 설치 후 두 개의 실행 파일이 들어갑니다:
@@ -97,37 +97,6 @@
 4. **활성화 / Enable** 클릭
 
 사용자 권한의 Windows 작업 스케줄러 항목으로 등록됩니다. 다시 클릭하면 해제.
-
----
-
-## 🛠️ Build from source
-
-요구 사항: Windows 10/11, Python 3.11+. PyInstaller / Inno Setup 은 `build.bat` 가 winget 으로 자동 설치합니다.
-
-```cmd
-git clone https://github.com/55002ghals/WindowScreenSaver.git
-cd WindowScreenSaver
-build.bat
-```
-
-산출물:
-- `dist\WinLayoutSaver\` — 실행 가능한 번들
-- `installer\Output\WinLayoutSaverSetup.exe` — 배포용 인스톨러
-
-### 개발 환경에서 실행
-
-```cmd
-install.bat        :: Python 의존성 설치
-python main.py     :: GUI 실행
-```
-
-### 수동 빌드
-
-```cmd
-pip install -r requirements.txt
-pyinstaller WinLayoutSaver.spec --noconfirm
-ISCC.exe /DMyAppVersion=1.12.0 installer\WinLayoutSaver.iss
-```
 
 ---
 

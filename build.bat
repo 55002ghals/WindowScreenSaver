@@ -1,12 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
-:: ─────────────────────────────────────────────────────────────────────────────
+:: =============================================================================
 :: Build WinLayoutSaverSetup.exe end-to-end.
 :: 1) Ensure Python deps (incl. PyInstaller) are installed.
-:: 2) Run PyInstaller → dist\WinLayoutSaver\
-:: 3) Ensure Inno Setup (ISCC) is installed (winget) — install if missing.
-:: 4) Run ISCC → installer\Output\WinLayoutSaverSetup.exe
-:: ─────────────────────────────────────────────────────────────────────────────
+:: 2) Run PyInstaller -> dist\WinLayoutSaver\
+:: 3) Ensure Inno Setup (ISCC) is installed (winget) - install if missing.
+:: 4) Run ISCC -> installer\Output\WinLayoutSaverSetup.exe
+:: =============================================================================
 
 cd /d "%~dp0"
 
@@ -15,6 +15,7 @@ echo === [1/4] Installing Python dependencies ===
 pip install -r requirements.txt -r requirements-dev.txt
 if errorlevel 1 (
     echo ERROR: pip install failed.
+    pause
     exit /b 1
 )
 
@@ -22,13 +23,15 @@ echo.
 echo === [2/4] Building exes with PyInstaller ===
 if exist build rmdir /s /q build
 if exist dist\WinLayoutSaver rmdir /s /q dist\WinLayoutSaver
-pyinstaller WinLayoutSaver.spec --noconfirm
+python -m PyInstaller WinLayoutSaver.spec --noconfirm
 if errorlevel 1 (
     echo ERROR: PyInstaller build failed.
+    pause
     exit /b 1
 )
 if not exist dist\WinLayoutSaver\WinLayoutSaver.exe (
     echo ERROR: dist\WinLayoutSaver\WinLayoutSaver.exe missing after build.
+    pause
     exit /b 1
 )
 
@@ -38,6 +41,7 @@ set "ISCC="
 for %%P in (
     "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
     "%ProgramFiles%\Inno Setup 6\ISCC.exe"
+    "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
     "%ProgramFiles(x86)%\Inno Setup 5\ISCC.exe"
 ) do (
     if exist %%P set "ISCC=%%~P"
@@ -51,16 +55,19 @@ if not defined ISCC (
     if errorlevel 1 (
         echo ERROR: winget install failed. Install Inno Setup manually:
         echo   https://jrsoftware.org/isdl.php
+        pause
         exit /b 1
     )
     for %%P in (
         "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
         "%ProgramFiles%\Inno Setup 6\ISCC.exe"
+        "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
     ) do (
         if exist %%P set "ISCC=%%~P"
     )
     if not defined ISCC (
         echo ERROR: ISCC.exe still not found after winget install.
+        pause
         exit /b 1
     )
 )
@@ -74,12 +81,14 @@ echo App version: !APP_VER!
 "!ISCC!" /DMyAppVersion=!APP_VER! installer\WinLayoutSaver.iss
 if errorlevel 1 (
     echo ERROR: ISCC compile failed.
+    pause
     exit /b 1
 )
 
 echo.
-echo ─────────────────────────────────────────────────────────────────────
+echo =====================================================================
 echo  BUILD COMPLETE
 echo  Installer: installer\Output\WinLayoutSaverSetup.exe
-echo ─────────────────────────────────────────────────────────────────────
+echo =====================================================================
+pause
 endlocal
