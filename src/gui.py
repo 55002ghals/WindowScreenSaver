@@ -187,7 +187,7 @@ class WinLayoutSaverApp(tk.Tk):
                 row.pack(fill=tk.X, pady=1)
                 radio_var = tk.IntVar(value=1 if name == ar_name else 0)
                 tk.Radiobutton(row, variable=radio_var, value=1, state=tk.DISABLED).pack(side=tk.LEFT)
-                tk.Label(row, text=name, width=16, anchor="w").pack(side=tk.LEFT)
+                tk.Label(row, text=name, width=50, anchor="w").pack(side=tk.LEFT)
 
                 # 저장 시각
                 saved_at = self._format_saved_at(name)
@@ -197,6 +197,10 @@ class WinLayoutSaverApp(tk.Tk):
                 # Per-layout monitor match indicator
                 match_text, match_color = self._get_match_indicator(name)
                 tk.Label(row, text=match_text, fg=match_color, width=14, anchor="w").pack(side=tk.LEFT)
+
+                # ── 가로 확장용 spacer (Task-17): 이름과 버튼 사이 빈 공간이 늘어나게 ──
+                spacer = tk.Frame(row)
+                spacer.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
                 tk.Button(row, text=t("preview_btn"), command=lambda n=name: self._on_preview(n)).pack(side=tk.LEFT, padx=2)
                 tk.Button(row, text=t("restore_btn"), command=lambda n=name: self._on_restore(n)).pack(side=tk.LEFT, padx=2)
