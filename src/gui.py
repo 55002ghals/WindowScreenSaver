@@ -89,7 +89,7 @@ class WinLayoutSaverApp(tk.Tk):
 
         # 행 2: 모드 라벨 + Radio 2개 + 설명
         tk.Label(self._ar_section, text=t("mode_label")).grid(row=2, column=0, sticky="w", padx=(0, 6), pady=2)
-        self._ar_mode_var = tk.StringVar(value="fast")
+        self._ar_mode_var = tk.StringVar(value="full")
         self._ar_mode_fast_rb = tk.Radiobutton(
             self._ar_section, text=t("mode_fast"),
             variable=self._ar_mode_var, value="fast",
@@ -110,7 +110,7 @@ class WinLayoutSaverApp(tk.Tk):
 
         # 행 3: 시작 지연 라벨 + Entry
         tk.Label(self._ar_section, text=t("startup_delay_label")).grid(row=3, column=0, sticky="w", padx=(0, 6), pady=2)
-        self._delay_var = tk.StringVar(value="10")
+        self._delay_var = tk.StringVar(value="1")
         self._delay_entry = tk.Entry(self._ar_section, textvariable=self._delay_var, width=5)
         self._delay_entry.grid(row=3, column=1, sticky="w", pady=2)
         # ───────────────────────────────────────────────────────────────────
@@ -373,7 +373,7 @@ class WinLayoutSaverApp(tk.Tk):
         try:
             ar["startup_delay_seconds"] = int(self._delay_var.get())
         except ValueError:
-            ar["startup_delay_seconds"] = 10
+            ar["startup_delay_seconds"] = 1
 
         # Resolve scheduler args for current execution mode (frozen vs dev).
         if getattr(sys, "frozen", False):

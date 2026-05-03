@@ -86,8 +86,8 @@ def _default_config() -> dict:
         "auto_rollback": {
             "enabled": False,
             "layout_name": "",
-            "mode": "fast",
-            "startup_delay_seconds": 10,
+            "mode": "full",
+            "startup_delay_seconds": 1,
             "app_launch_timeout_seconds": 60,
             "per_window_retry_ms": 500,
         },
