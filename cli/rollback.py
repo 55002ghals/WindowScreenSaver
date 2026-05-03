@@ -20,8 +20,8 @@ from src import storage, capture, restore as restore_mod
 
 logger = logging.getLogger("rollback")
 
-_SHELL_WAIT_INTERVAL_S = 5
-_SHELL_WAIT_MAX_TRIES = 12   # 5s * 12 = 60s
+_SHELL_WAIT_INTERVAL_S = 1
+_SHELL_WAIT_MAX_TRIES = 60   # 1s * 60 = 60s (was 5s * 12)
 
 
 def wait_for_shell_ready(
@@ -128,7 +128,7 @@ def main():
         no_launch=no_launch,
         monitors_current=monitors_current,
         post_settle_ms=2000,
-        post_launch_settle_ms=0 if no_launch else 5000,
+        post_launch_settle_ms=0 if no_launch else 3000,
     )
 
     logger.info(
