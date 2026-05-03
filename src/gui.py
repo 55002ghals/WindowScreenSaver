@@ -205,14 +205,21 @@ class WinLayoutSaverApp(tk.Tk):
                 match_text, match_color = self._get_match_indicator(name)
                 tk.Label(row, text=match_text, fg=match_color, width=14, anchor="w").pack(side=tk.LEFT)
 
-                # ── 가로 확장용 spacer (Task-17): 이름과 버튼 사이 빈 공간이 늘어나게 ──
-                spacer = tk.Frame(row)
-                spacer.pack(side=tk.LEFT, fill=tk.X, expand=True)
+                # 버튼 4개는 RIGHT로 고정: 창이 작아져도 항상 우측에 보임.
+                # 시각적 순서(왼→오): preview | restore | settings | delete 유지를 위해 역순으로 pack.
+                tk.Button(row, text=t("delete_btn"), command=lambda n=name: self._on_delete(n)).pack(side=tk.RIGHT, padx=2)
+                tk.Button(row, text=t("settings_btn"), command=lambda n=name: self._on_settings(n)).pack(side=tk.RIGHT, padx=2)
+                tk.Button(row, text=t("restore_btn"), command=lambda n=name: self._on_restore(n)).pack(side=tk.RIGHT, padx=2)
+                tk.Button(row, text=t("preview_btn"), command=lambda n=name: self._on_preview(n)).pack(side=tk.RIGHT, padx=2)
 
-                tk.Button(row, text=t("preview_btn"), command=lambda n=name: self._on_preview(n)).pack(side=tk.LEFT, padx=2)
-                tk.Button(row, text=t("restore_btn"), command=lambda n=name: self._on_restore(n)).pack(side=tk.LEFT, padx=2)
-                tk.Button(row, text=t("settings_btn"), command=lambda n=name: self._on_settings(n)).pack(side=tk.LEFT, padx=2)
-                tk.Button(row, text=t("delete_btn"), command=lambda n=name: self._on_delete(n)).pack(side=tk.LEFT, padx=2)
+            # 최소 창 너비 설정: 첫 행의 필수 위젯이 잘리기 전 이상 작아지지 않도록.
+            self.update_idletasks()
+            rows = [w for w in self._layout_inner.winfo_children() if isinstance(w, tk.Frame)]
+            if rows:
+                row_min_w = rows[0].winfo_reqwidth()
+                win_min_w = row_min_w + 32  # 좌우 padx 여유
+                cur_min = self.minsize()
+                self.minsize(max(win_min_w, cur_min[0]), max(cur_min[1], 300))
 
         # Update auto-rollback combo
         self._ar_combo["values"] = names
