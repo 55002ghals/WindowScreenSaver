@@ -121,6 +121,7 @@
 ├── WinLayoutSaver.spec        PyInstaller 설정 (exe 2개 빌드)
 ├── installer/WinLayoutSaver.iss   Inno Setup 인스톨러 스크립트
 ├── build.bat                  엔드투엔드 빌드 오케스트레이터
+├── rebuild.bat                clean 후 전체 재빌드 (build/ dist/ installer\Output\ 삭제)
 └── requirements.txt
 ```
 

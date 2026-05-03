@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 :: =============================================================================
-:: rebuild.bat — Clean previous build artifacts then run build.bat from scratch.
+:: rebuild.bat -- Clean previous build artifacts then run build.bat from scratch.
 :: Removes: build\, dist\, installer\Output\
 :: Then invokes build.bat which handles deps + PyInstaller + Inno Setup.
 :: =============================================================================
