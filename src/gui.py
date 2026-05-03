@@ -7,7 +7,7 @@ import time
 import tkinter as tk
 from datetime import datetime
 from pathlib import Path
-from tkinter import messagebox, simpledialog, scrolledtext, ttk
+from tkinter import messagebox, scrolledtext, ttk
 
 from src import storage, capture, restore as restore_mod, scheduler
 from src.i18n import t, set_language
@@ -17,6 +17,13 @@ from src.paths import LOGS_DIR
 from src.version import __version__
 
 logger = logging.getLogger("gui")
+
+MAX_LAYOUT_NAME_LEN = 50
+
+
+def _is_valid_layout_name_input(proposed: str) -> bool:
+    """Rename 다이얼로그의 키 입력 검증 콜백. 50자 이하면 True (입력 허용), 초과면 False (입력 거부)."""
+    return len(proposed) <= MAX_LAYOUT_NAME_LEN
 
 
 class WinLayoutSaverApp(tk.Tk):
@@ -346,27 +353,67 @@ class WinLayoutSaverApp(tk.Tk):
             self.after(0, self._refresh_layouts)
         threading.Thread(target=_work, daemon=True).start()
 
+    def _ask_layout_name(self, initial: str) -> str | None:
+        """이름 변경용 커스텀 모달 다이얼로그. 50자(MAX_LAYOUT_NAME_LEN) 초과 키 입력은 차단. 반환: 새 이름 또는 취소 시 None."""
+        top = tk.Toplevel(self)
+        top.title(t("rename_dialog_title"))
+        top.transient(self)
+        top.grab_set()
+        top.resizable(False, False)
+
+        tk.Label(top, text=t("rename_label")).pack(padx=12, pady=(12, 4), anchor="w")
+
+        vcmd = (top.register(_is_valid_layout_name_input), "%P")
+        var = tk.StringVar(value=initial)
+        entry = tk.Entry(top, textvariable=var, width=52, validate="key", validatecommand=vcmd)
+        entry.pack(padx=12, pady=4, fill=tk.X)
+        entry.focus_set()
+        entry.select_range(0, tk.END)
+
+        result: dict[str, str | None] = {"value": None}
+
+        def _ok(_event=None):
+            result["value"] = var.get().strip()
+            top.destroy()
+
+        def _cancel(_event=None):
+            result["value"] = None
+            top.destroy()
+
+        btns = tk.Frame(top)
+        btns.pack(padx=12, pady=(4, 12), fill=tk.X)
+        tk.Button(btns, text="OK", width=8, command=_ok).pack(side=tk.RIGHT, padx=(4, 0))
+        tk.Button(btns, text="Cancel", width=8, command=_cancel).pack(side=tk.RIGHT)
+
+        top.bind("<Return>", _ok)
+        top.bind("<Escape>", _cancel)
+
+        self.wait_window(top)
+        return result["value"]
+
     def _on_settings(self, name: str):
-        new_name = simpledialog.askstring(t("rename_dialog_title"), t("rename_label"), initialvalue=name, parent=self)
-        if new_name and new_name != name:
-            def _work():
-                try:
-                    layout = storage.load_layout(name)
-                    layout["name"] = new_name
-                    storage.save_layout(new_name, layout)
-                    # PNG 동반 이동 (있을 때만)
-                    old_png = storage.screenshot_path(name)
-                    new_png = storage.screenshot_path(new_name)
-                    if old_png.exists():
-                        try:
-                            old_png.replace(new_png)
-                        except OSError as e:
-                            logger.warning("png rename failed: %s", e)
-                    storage.delete_layout(name)
-                    self.after(0, self._refresh_layouts)
-                except Exception as e:
-                    logger.error("rename failed: %s", e)
-            threading.Thread(target=_work, daemon=True).start()
+        new_name = self._ask_layout_name(initial=name)
+        if not new_name or new_name == name:
+            return
+
+        def _work():
+            try:
+                layout = storage.load_layout(name)
+                layout["name"] = new_name
+                storage.save_layout(new_name, layout)
+                # PNG 동반 이동 (있을 때만)
+                old_png = storage.screenshot_path(name)
+                new_png = storage.screenshot_path(new_name)
+                if old_png.exists():
+                    try:
+                        old_png.replace(new_png)
+                    except OSError as e:
+                        logger.warning("png rename failed: %s", e)
+                storage.delete_layout(name)
+                self.after(0, self._refresh_layouts)
+            except Exception as e:
+                logger.error("rename failed: %s", e)
+        threading.Thread(target=_work, daemon=True).start()
 
     def _on_ar_toggle(self):
         config = storage.load_config()
