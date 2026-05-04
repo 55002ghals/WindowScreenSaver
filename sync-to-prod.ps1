@@ -21,6 +21,13 @@ robocopy $DEV $PROD /MIR /NFL /NDL /NJH /NJS /NC /NS /NP @xdArgs @xfArgs
 # robocopy exit codes 0-7 are success; 8+ are real errors.
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed: $LASTEXITCODE" }
 
+# /XF only skips copying; it does NOT delete pre-existing excluded files in dest.
+# Explicitly purge them so the prod tree is clean regardless of prior state.
+foreach ($pat in $exFiles) {
+    Get-ChildItem -Path $PROD -Filter $pat -Recurse -File -ErrorAction SilentlyContinue |
+        Remove-Item -Force
+}
+
 # Flip IS_PROD_BUILD = False  ->  True in prod copy.
 $bc = Join-Path $PROD "src\build_config.py"
 (Get-Content $bc -Raw) -replace "IS_PROD_BUILD\s*=\s*False", "IS_PROD_BUILD = True" |
