@@ -5,6 +5,7 @@ from pathlib import Path
 logger = logging.getLogger("storage")
 
 from src.paths import APPDATA, LAYOUTS_DIR, CONFIG_PATH
+from src.build_config import BUILD_DEFAULT_DEBUG_LOGGING
 
 
 def _ensure_dirs():
@@ -92,4 +93,5 @@ def _default_config() -> dict:
             "per_window_retry_ms": 500,
         },
         "ui": {"language": "ko"},
+        "logging": {"debug_enabled": BUILD_DEFAULT_DEBUG_LOGGING},
     }

@@ -8,7 +8,11 @@ from src.paths import LOGS_DIR
 LOG_FORMAT = "%(asctime)s.%(msecs)03d %(levelname)-5s %(name)-12s: %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-def setup_logging(enable_gui_handler: bool = False, gui_queue: queue.Queue = None) -> None:
+def setup_logging(
+    enable_gui_handler: bool = False,
+    gui_queue: queue.Queue = None,
+    debug_enabled: bool = True,
+) -> None:
     root = logging.getLogger()
     # Prevent duplicate handlers; ignore pytest's LogCaptureHandler
     app_handlers = [h for h in root.handlers if h.__class__.__name__ != "LogCaptureHandler"]
@@ -16,6 +20,8 @@ def setup_logging(enable_gui_handler: bool = False, gui_queue: queue.Queue = Non
         return
     root.setLevel(logging.DEBUG)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+    file_level = logging.DEBUG if debug_enabled else logging.WARNING
 
     # File handler
     today = datetime.now().strftime("%Y%m%d")
@@ -25,7 +31,7 @@ def setup_logging(enable_gui_handler: bool = False, gui_queue: queue.Queue = Non
         backupCount=5,
         encoding="utf-8",
     )
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(file_level)
     file_handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
     root.addHandler(file_handler)
 
@@ -38,5 +44,5 @@ def setup_logging(enable_gui_handler: bool = False, gui_queue: queue.Queue = Non
     # GUI queue handler (optional)
     if enable_gui_handler and gui_queue is not None:
         queue_handler = logging.handlers.QueueHandler(gui_queue)
-        queue_handler.setLevel(logging.DEBUG)
+        queue_handler.setLevel(file_level)
         root.addHandler(queue_handler)
