@@ -12,11 +12,19 @@ cd /d "%~dp0"
 
 echo.
 echo === [1/4] Installing Python dependencies ===
-pip install -r requirements.txt -r requirements-dev.txt
+pip install -r requirements.txt
 if errorlevel 1 (
     echo ERROR: pip install failed.
     pause
     exit /b 1
+)
+if exist requirements-dev.txt (
+    pip install -r requirements-dev.txt
+    if errorlevel 1 (
+        echo ERROR: pip install requirements-dev.txt failed.
+        pause
+        exit /b 1
+    )
 )
 
 echo.

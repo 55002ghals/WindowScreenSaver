@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import os
 import queue
 import sys
@@ -10,6 +11,8 @@ from pathlib import Path
 from tkinter import messagebox, scrolledtext, ttk
 
 from src import storage, capture, restore as restore_mod, scheduler
+from src import build_config
+from src.build_config import BUILD_DEFAULT_DEBUG_LOGGING
 from src.i18n import t, set_language
 from src.logging_setup import setup_logging
 from src.monitors import list_current_monitors, compare_monitors, MatchResult
@@ -29,10 +32,11 @@ def _is_valid_layout_name_input(proposed: str) -> bool:
 class WinLayoutSaverApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self._log_queue: queue.Queue = queue.Queue()
-        setup_logging(enable_gui_handler=True, gui_queue=self._log_queue)
-
         config = storage.load_config()
+        debug_enabled = config.get("logging", {}).get("debug_enabled", BUILD_DEFAULT_DEBUG_LOGGING)
+        self._log_queue: queue.Queue = queue.Queue()
+        setup_logging(enable_gui_handler=True, gui_queue=self._log_queue, debug_enabled=debug_enabled)
+
         lang = config.get("ui", {}).get("language", "ko")
         set_language(lang)
 
@@ -54,8 +58,9 @@ class WinLayoutSaverApp(tk.Tk):
         # Footer (version label) — pack BOTTOM 먼저 호출해야 항상 하단에 고정됨
         footer = tk.Frame(self)
         footer.pack(side=tk.BOTTOM, fill=tk.X, padx=8, pady=(0, 4))
-        tk.Label(footer, text=f"v{__version__}", anchor="w",
-                 fg="#888", font=("Consolas", 9)).pack(side=tk.LEFT)
+        if not build_config.IS_PROD_BUILD:
+            tk.Label(footer, text=f"v{__version__}", anchor="w",
+                     fg="#888", font=("Consolas", 9)).pack(side=tk.LEFT)
 
         # Monitor strip
         self._monitor_strip_var = tk.StringVar(value="Monitors: detecting…")
@@ -161,6 +166,14 @@ class WinLayoutSaverApp(tk.Tk):
         tk.Button(btn_row, text=t("clear_btn"), command=self._clear_log).pack(side=tk.LEFT, padx=2)
         tk.Button(btn_row, text=t("copy_btn"), command=self._copy_log).pack(side=tk.LEFT, padx=2)
         tk.Button(btn_row, text=t("open_log_dir_btn"), command=self._open_log_dir).pack(side=tk.LEFT, padx=2)
+
+        _cfg = storage.load_config()
+        self._debug_logging_var = tk.BooleanVar(
+            value=_cfg.get("logging", {}).get("debug_enabled", BUILD_DEFAULT_DEBUG_LOGGING)
+        )
+        tk.Checkbutton(btn_row, text=t("debug_logging_label"),
+                       variable=self._debug_logging_var,
+                       command=self._on_debug_logging_toggle).pack(side=tk.LEFT, padx=(12, 0))
 
         self._log_text = scrolledtext.ScrolledText(log_frame, state=tk.DISABLED, height=8,
                                                     font=("Consolas", 9), wrap=tk.NONE)
@@ -655,6 +668,17 @@ class WinLayoutSaverApp(tk.Tk):
 
     def _open_log_dir(self):
         os.startfile(str(LOGS_DIR))
+
+    def _on_debug_logging_toggle(self):
+        enabled = self._debug_logging_var.get()
+        config = storage.load_config()
+        config.setdefault("logging", {})["debug_enabled"] = enabled
+        storage.save_config(config)
+        new_level = logging.DEBUG if enabled else logging.WARNING
+        for h in logging.getLogger().handlers:
+            if isinstance(h, (logging.handlers.RotatingFileHandler, logging.handlers.QueueHandler)):
+                h.setLevel(new_level)
+        self._status_var.set(t("debug_logging_on_status" if enabled else "debug_logging_off_status"))
 
 
 def main():

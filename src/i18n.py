@@ -45,6 +45,9 @@ STRINGS = {
         "register_failed_msg": "자동복구 작업 등록에 실패했습니다.\n로그 파일을 확인하세요:\n{log_dir}",
         "run_now_not_registered_msg": "자동복구 작업이 등록되어 있지 않습니다.\n먼저 활성화 버튼을 눌러 등록하세요.",
         "migrate_failed_status": "자동복구 작업 마이그레이션 실패 — 다음 실행 시 재시도합니다.",
+        "debug_logging_label": "디버그 로깅",
+        "debug_logging_on_status": "디버그 로깅 활성화 (DEBUG 이상 기록)",
+        "debug_logging_off_status": "디버그 로깅 비활성화 (WARNING 이상만 기록)",
     },
     "en": {
         "app_title": "WinLayoutSaver",
@@ -92,6 +95,9 @@ STRINGS = {
         "register_failed_msg": "Failed to register the auto-recovery task.\nCheck the log files at:\n{log_dir}",
         "run_now_not_registered_msg": "The auto-recovery task is not registered.\nClick the Enable button first to register it.",
         "migrate_failed_status": "Auto-recovery task migration failed — will retry on next launch.",
+        "debug_logging_label": "Debug logging",
+        "debug_logging_on_status": "Debug logging enabled (DEBUG and above)",
+        "debug_logging_off_status": "Debug logging disabled (WARNING and above only)",
     },
 }
 

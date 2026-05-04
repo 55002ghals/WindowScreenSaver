@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.logging_setup import LOG_FORMAT, DATE_FORMAT
 from src import storage, capture, restore as restore_mod
+from src.build_config import BUILD_DEFAULT_DEBUG_LOGGING
 
 logger = logging.getLogger("rollback")
 
@@ -75,12 +76,15 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     rollback_log = logs_dir / f"rollback-{timestamp}.log"
 
+    config = storage.load_config()
+    debug_enabled = config.get("logging", {}).get("debug_enabled", BUILD_DEFAULT_DEBUG_LOGGING)
+
     import logging.handlers
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     fmt = logging.Formatter(LOG_FORMAT, DATE_FORMAT)
     fh = logging.handlers.RotatingFileHandler(rollback_log, maxBytes=5*1024*1024, backupCount=5, encoding="utf-8")
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(logging.DEBUG if debug_enabled else logging.WARNING)
     fh.setFormatter(fmt)
     root.addHandler(fh)
     ch = logging.StreamHandler()
@@ -89,8 +93,6 @@ def main():
     root.addHandler(ch)
 
     logger.info("rollback: starting (pid=%d)", os.getpid())
-
-    config = storage.load_config()
     rollback_cfg = config.get("auto_rollback", {})
 
     if not rollback_cfg.get("enabled", False):
