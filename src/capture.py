@@ -186,6 +186,7 @@ def list_current_windows() -> list[dict]:
             ctx = capture_for(exe_path, hwnd)
             if ctx is not None:
                 entry["app_context"] = ctx
+                logger.info("app_context attached hwnd=0x%x type=%s", hwnd, ctx.get("type"))
             results.append(entry)
             logger.debug(
                 "hwnd=0x%x exe=%s title='%s' state=%s rect=%s",
