@@ -90,13 +90,19 @@
 ## 🚀 Usage
 
 ### 레이아웃 저장
-원하는 창 배치를 만든 후 **현재 배치 저장 / Save Current Layout** 클릭. `Screen<N>` 행이 추가되고 가상 데스크톱 PNG 가 자동 캡처됩니다.
 
 <p align="center">
   <img src="docs/assets/screenshots/main-ui.png" width="720" alt="Main GUI" />
 </p>
 
+원하는 창 배치를 만든 후 **현재 배치 저장 / Save Current Layout** 클릭. `Screen<N>` 행이 추가되고 가상 데스크톱 PNG 가 자동 캡처됩니다.
+
 ### 복원
+
+<p align="center">
+  <img src="docs/assets/screenshots/monitor-mismatch.png" width="720" alt="Monitor mismatch warning" />
+</p>
+
 목록에서 행을 선택하고 **복원 / Restore** 클릭.
 - **Full**: 닫힌 앱을 다시 실행하면서 위치 적용
 - **Quick**: 이미 열려 있는 창만 재배치 (빠름)
@@ -108,11 +114,11 @@
 
 모니터 구성이 바뀌었으면 행에 `⚠Not matched`(주황) 또는 `⚠mismatch`(빨강) 표시가 뜹니다 — 복원은 동작하지만 창이 의도하지 않은 화면에 갈 수 있습니다.
 
-<p align="center">
-  <img src="docs/assets/screenshots/monitor-mismatch.png" width="720" alt="Monitor mismatch warning" />
-</p>
-
 ### 로그온 시 자동 복원
+
+<p align="center">
+  <img src="docs/assets/screenshots/auto-restore.png" width="720" alt="Auto-restore on boot" />
+</p>
 
 **부팅 자동 복구 / Auto-restore on boot** 섹션에서:
 
@@ -122,10 +128,6 @@
 4. **활성화 / Enable** 클릭
 
 사용자 권한의 Windows 작업 스케줄러 항목으로 등록됩니다. 다시 클릭하면 해제.
-
-<p align="center">
-  <img src="docs/assets/screenshots/auto-restore.png" width="720" alt="Auto-restore on boot" />
-</p>
 
 ---
 
