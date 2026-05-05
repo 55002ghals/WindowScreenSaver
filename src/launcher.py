@@ -24,10 +24,18 @@ def is_running(exe_path: str) -> bool:
     return False
 
 
-def launch_app(exe_path: str, exe_args: str = "", cwd: str = "", is_uwp: bool = False) -> Optional[subprocess.Popen]:
+def launch_app(
+    exe_path: str,
+    exe_args: str = "",
+    cwd: str = "",
+    is_uwp: bool = False,
+    *,
+    args_list: list[str] | None = None,
+) -> Optional[subprocess.Popen]:
     """
     Launch an application.
     For UWP apps, uses `explorer.exe shell:AppsFolder\\<AUMID>`.
+    args_list (kw-only): direct list of extra args; takes priority over exe_args.
     Returns the Popen object or None on failure.
     """
     if is_uwp:
@@ -35,9 +43,12 @@ def launch_app(exe_path: str, exe_args: str = "", cwd: str = "", is_uwp: bool = 
         cmd = ["explorer.exe", f"shell:AppsFolder\\{aumid}"]
         logger.info("launching UWP app shell:AppsFolder\\%s", aumid)
     else:
-        args = exe_args.split() if exe_args else []
-        cmd = [exe_path] + args
-        logger.info("launching %s args=%s", exe_path, args)
+        if args_list is not None:
+            cmd = [exe_path] + list(args_list)
+        else:
+            args = exe_args.split() if exe_args else []
+            cmd = [exe_path] + args
+        logger.info("launching %s args=%s", exe_path, cmd[1:])
 
     try:
         proc = subprocess.Popen(
@@ -118,19 +129,46 @@ def ensure_apps_running(
     """
     For each exe_path, compare saved window count vs running window count.
     If running count < saved count, launch the app once per missing window.
+    Windows with app_context are always launched fresh with their own args.
     Returns total number of launch_app calls made.
     """
     from collections import Counter
 
+    # Split: app_context windows always get a fresh launch with individual args
+    saved_with_ctx = [w for w in saved_windows if "app_context" in w]
+    saved_without_ctx = [w for w in saved_windows if "app_context" not in w]
+
+    launched_total = 0
+
+    # Launch each app_context window individually with its own URL/file args
+    for w in saved_with_ctx:
+        ctx = w["app_context"]
+        exe = w.get("exe_path", "")
+        if not exe:
+            continue
+        if ctx.get("type") == "chromium":
+            from src.restore_browser import build_browser_launch_args
+            full_args = build_browser_launch_args(exe, ctx)
+        else:
+            from src.restore_doc import build_doc_launch_args
+            full_args = build_doc_launch_args(exe, ctx)
+        # full_args[0] is exe_path; pass the rest as args_list
+        extra = full_args[1:]
+        logger.info("ensure_apps (ctx): launching %s extra=%s", exe, extra)
+        proc = launch_app(exe, cwd=w.get("cwd", ""), is_uwp=w.get("is_uwp", False), args_list=extra)
+        if proc is not None:
+            launched_total += 1
+
+    # Standard deficit-based logic for windows without app_context
     exe_to_saved: dict[str, list[dict]] = {}
-    for w in saved_windows:
+    for w in saved_without_ctx:
         exe = w.get("exe_path", "")
         if not exe:
             continue
         exe_to_saved.setdefault(exe.lower(), []).append(w)
 
     if not exe_to_saved:
-        return 0
+        return launched_total
 
     running_now = list_current_windows()
     running_counts = Counter(
@@ -142,7 +180,6 @@ def ensure_apps_running(
         len(exe_to_saved), dict(running_counts),
     )
 
-    launched_total = 0
     for exe_lower, saved_list in exe_to_saved.items():
         n_needed = len(saved_list)
         n_running = running_counts.get(exe_lower, 0)
