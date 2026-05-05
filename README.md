@@ -22,8 +22,11 @@
 <p align="center">
   <a href="#-installation">Install</a> ·
   <a href="#-features">Features</a> ·
-  <a href="#-usage">Usage</a> ·
-  <a href="#%EF%B8%8F-build-from-source">Build</a>
+  <a href="#-usage">Usage</a>
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshots/hero.gif" width="720" alt="Save and restore demo" />
 </p>
 
 ---
@@ -33,7 +36,8 @@
 매일 같은 듀얼·트리플 모니터에 같은 창 배치를 다시 만드는 게 지겨우셨나요?
 **WinLayoutSaver** 는 모든 보이는 창의 위치·크기·상태를 JSON 으로 저장했다가
 한 번의 클릭(또는 로그온 시 자동)으로 그대로 복원합니다.
-닫혀 있던 앱은 **다시 실행시키면서** 원래 자리에 배치합니다.
+닫혀 있던 앱은 **다시 실행시키면서** 원래 자리에 배치하고,
+브라우저 탭 URL 과 마지막에 열려 있던 문서 경로까지 함께 되살립니다.
 
 > [!NOTE]
 > 별도 관리자 권한이 필요 없습니다. 자동 복원은 Windows 작업 스케줄러를 사용자 권한으로 등록합니다.
@@ -47,11 +51,19 @@
 | 🖼️ **Multi-monitor + DPI aware** | per-monitor DPI 스케일을 정확히 처리 |
 | 🗂️ **Virtual Desktop 지원** | 가상 데스크톱 단위로 창 캡처 |
 | 🚀 **Full / Quick 복원** | Full = 닫힌 앱 재실행 + 배치 / Quick = 위치만 |
+| 🌐 **브라우저 탭 복원** | Chrome/Edge/Brave/Whale 탭 URL 까지 저장 → Full 복원 시 동일 URL 로 재오픈 (UIA 기반) |
+| 📄 **문서 경로 복원** | Word·PPT·Excel·VS Code·메모장·PDF 등 — 마지막에 열려 있던 문서/워크스페이스 경로까지 복원 |
+| 🧱 **앱별 컨텍스트 (app_context)** | 창 단위로 추가 데이터(`browser_tabs`, `doc_path`, `workspace_path`)를 JSON 스키마 v2 로 저장 |
 | ⏰ **로그온 자동 복원** | 작업 스케줄러 등록, 시작 지연 설정 가능 |
 | 📸 **레이아웃 미리보기** | 저장 시점의 PNG 스냅샷 자동 생성 |
 | 🌐 **한국어 / English UI** | 시스템 언어에 따라 자동 전환 |
 | 🔍 **모니터 변경 감지** | 모니터 구성이 바뀌면 색상으로 경고 |
+| 🪵 **상세 로그 토글** | 설정의 *Debug logging* 으로 prod 빌드에서도 INFO/DEBUG 로그 활성화 가능 |
 | 💾 **사용자 데이터 보존** | `%APPDATA%\WinLayoutSaver\` — 업그레이드·재설치 시에도 유지 |
+
+<p align="center">
+  <img src="docs/assets/screenshots/preview-thumbnail.png" width="720" alt="Saved layout PNG preview" />
+</p>
 
 ---
 
@@ -80,12 +92,25 @@
 ### 레이아웃 저장
 원하는 창 배치를 만든 후 **현재 배치 저장 / Save Current Layout** 클릭. `Screen<N>` 행이 추가되고 가상 데스크톱 PNG 가 자동 캡처됩니다.
 
+<p align="center">
+  <img src="docs/assets/screenshots/main-ui.png" width="720" alt="Main GUI" />
+</p>
+
 ### 복원
 목록에서 행을 선택하고 **복원 / Restore** 클릭.
 - **Full**: 닫힌 앱을 다시 실행하면서 위치 적용
 - **Quick**: 이미 열려 있는 창만 재배치 (빠름)
 
+**Full** 복원에서는 위치뿐 아니라:
+
+- 브라우저(Chrome/Edge/Brave/Whale) 가 닫혀 있었다면 **동일 탭 URL** 로 다시 열림
+- Word/PPT/Excel/VS Code/메모장/PDF 등은 **마지막에 열려 있던 파일/워크스페이스** 를 다시 띄움
+
 모니터 구성이 바뀌었으면 행에 `⚠Not matched`(주황) 또는 `⚠mismatch`(빨강) 표시가 뜹니다 — 복원은 동작하지만 창이 의도하지 않은 화면에 갈 수 있습니다.
+
+<p align="center">
+  <img src="docs/assets/screenshots/monitor-mismatch.png" width="720" alt="Monitor mismatch warning" />
+</p>
 
 ### 로그온 시 자동 복원
 
@@ -98,6 +123,10 @@
 
 사용자 권한의 Windows 작업 스케줄러 항목으로 등록됩니다. 다시 클릭하면 해제.
 
+<p align="center">
+  <img src="docs/assets/screenshots/auto-restore.png" width="720" alt="Auto-restore on boot" />
+</p>
+
 ---
 
 ## 📁 Project layout
@@ -107,21 +136,30 @@
 
 ```
 .
-├── main.py                    GUI 진입점
-├── cli/rollback.py            헤드리스 복원 (작업 스케줄러 타깃)
+├── main.py                          GUI 진입점
+├── cli/rollback.py                  헤드리스 복원 (작업 스케줄러 타깃)
 ├── src/
-│   ├── gui.py                 Tkinter UI
-│   ├── capture.py             창 열거 + 가상 데스크톱 PNG
-│   ├── restore.py             재배치 / 재실행 로직
-│   ├── monitors.py            DPI + 멀티 모니터 좌표
-│   ├── storage.py             JSON 레이아웃 I/O
-│   ├── scheduler.py           Windows 작업 스케줄러 래퍼
-│   ├── i18n.py                한/영 문자열
-│   └── ...
-├── WinLayoutSaver.spec        PyInstaller 설정 (exe 2개 빌드)
-├── installer/WinLayoutSaver.iss   Inno Setup 인스톨러 스크립트
-├── build.bat                  엔드투엔드 빌드 오케스트레이터
-├── rebuild.bat                clean 후 전체 재빌드 (build/ dist/ installer\Output\ 삭제)
+│   ├── gui.py / gui_helpers.py      Tkinter UI
+│   ├── capture.py                   창 열거 + 가상 데스크톱 PNG
+│   ├── app_context.py               창별 컨텍스트 라우터
+│   ├── capture_browser.py           Chromium UIA 탭 URL 캡처
+│   ├── capture_office.py            Word/PPT/Excel COM 문서 경로 캡처
+│   ├── capture_doc_title.py         PDF/Notepad/VS Code 등 일반 문서 캡처
+│   ├── restore.py                   재배치 + 재실행 오케스트레이션
+│   ├── restore_browser.py           브라우저 launch args 빌더
+│   ├── restore_doc.py               문서 앱 launch args 빌더
+│   ├── launcher.py                  CreateProcess 래퍼
+│   ├── monitors.py                  DPI + 멀티 모니터 좌표
+│   ├── storage.py                   JSON 레이아웃 I/O (schema v2)
+│   ├── scheduler.py                 Windows 작업 스케줄러 래퍼
+│   ├── logging_setup.py             로그 핸들러 설정
+│   ├── build_config.py              IS_PROD_BUILD 플래그
+│   └── paths.py / version.py / i18n.py
+├── WinLayoutSaver.spec              PyInstaller 설정 (exe 2개 빌드)
+├── installer/WinLayoutSaver.iss     Inno Setup 인스톨러 스크립트
+├── build.bat                        엔드투엔드 빌드 오케스트레이터
+├── rebuild.bat                      clean 후 전체 재빌드 (build/ dist/ installer\Output\ 삭제)
+├── sync-to-prod.ps1                 dev → prod 폴더 미러 + IS_PROD_BUILD=True 전환
 └── requirements.txt
 ```
 
@@ -131,7 +169,7 @@
 
 ## 🧰 Tech stack
 
-Python 3.11+ · tkinter · pywin32 · psutil · Pillow · PyInstaller · Inno Setup
+Python 3.11+ · tkinter · pywin32 · comtypes · psutil · Pillow · PyInstaller · Inno Setup
 
 ## 🤝 Contributing
 
