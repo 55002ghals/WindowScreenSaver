@@ -234,6 +234,7 @@ def restore_layout(
     # Split: app_context windows are always freshly launched and matched by new hwnd
     saved_with_ctx    = [w for w in sorted_saved if "app_context" in w]
     saved_without_ctx = [w for w in sorted_saved if "app_context" not in w]
+    logger.info("ctx phase: %d ctx windows to launch, %d non-ctx windows", len(saved_with_ctx), len(saved_without_ctx))
 
     launched_count = 0
     if running_windows is None:
@@ -262,6 +263,7 @@ def restore_layout(
         new_by_exe: dict[str, list[dict]] = defaultdict(list)
         for w in new_windows:
             new_by_exe[w.get("exe_path", "").lower()].append(w)
+        logger.info("ctx phase: new windows by exe = %s", {k: len(v) for k, v in new_by_exe.items()})
 
         for saved in saved_with_ctx:
             exe_lower = saved.get("exe_path", "").lower()
