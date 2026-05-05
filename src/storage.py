@@ -7,6 +7,8 @@ logger = logging.getLogger("storage")
 from src.paths import APPDATA, LAYOUTS_DIR, CONFIG_PATH
 from src.build_config import BUILD_DEFAULT_DEBUG_LOGGING
 
+SCHEMA_VERSION = 2
+
 
 def _ensure_dirs():
     LAYOUTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -14,6 +16,7 @@ def _ensure_dirs():
 
 def save_layout(name: str, layout_data: dict) -> Path:
     _ensure_dirs()
+    layout_data["schema_version"] = SCHEMA_VERSION
     path = LAYOUTS_DIR / f"{name}.json"
     logger.info("saving layout '%s' to %s", name, path)
     try:
@@ -24,6 +27,28 @@ def save_layout(name: str, layout_data: dict) -> Path:
     windows_count = len(layout_data.get("windows", []))
     logger.info("saved '%s' (%d windows)", name, windows_count)
     return path
+
+
+def purge_legacy_layouts() -> int:
+    """Delete layout files with schema_version != 2 (or missing). Also removes paired PNG.
+    Returns number of files deleted."""
+    if not LAYOUTS_DIR.exists():
+        return 0
+    deleted = 0
+    for p in LAYOUTS_DIR.glob("*.json"):
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            if data.get("schema_version") == SCHEMA_VERSION:
+                continue
+        except Exception as e:
+            logger.warning("purge: cannot parse %s, removing: %s", p, e)
+        p.unlink(missing_ok=True)
+        png = p.with_suffix(".png")
+        if png.exists():
+            png.unlink()
+        deleted += 1
+        logger.info("purged legacy layout: %s", p.name)
+    return deleted
 
 
 def load_layout(name: str) -> dict:
