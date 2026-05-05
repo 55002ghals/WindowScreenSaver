@@ -27,6 +27,8 @@
 
 <p align="center">
   <img src="docs/assets/screenshots/hero.gif" width="720" alt="Save and restore demo" />
+  <br/>
+  <sub><i>한 클릭으로 모든 창 배치를 저장 → 닫고 → 원래 자리로 복원하는 데모</i></sub>
 </p>
 
 ---
@@ -63,6 +65,8 @@
 
 <p align="center">
   <img src="docs/assets/screenshots/preview-thumbnail.png" width="720" alt="Saved layout PNG preview" />
+  <br/>
+  <sub><i>저장 시점에 자동 캡처되는 가상 데스크톱 PNG 미리보기</i></sub>
 </p>
 
 ---
@@ -93,6 +97,8 @@
 
 <p align="center">
   <img src="docs/assets/screenshots/main-ui.png" width="720" alt="Main GUI" />
+  <br/>
+  <sub><i>메인 GUI — 저장된 레이아웃 목록과 각 행의 미리보기 썸네일</i></sub>
 </p>
 
 원하는 창 배치를 만든 후 **현재 배치 저장 / Save Current Layout** 클릭. `Screen<N>` 행이 추가되고 가상 데스크톱 PNG 가 자동 캡처됩니다.
@@ -101,6 +107,8 @@
 
 <p align="center">
   <img src="docs/assets/screenshots/monitor-mismatch.png" width="720" alt="Monitor mismatch warning" />
+  <br/>
+  <sub><i>모니터 구성이 바뀌면 행에 색상 경고 — 주황 = 일부 mismatch, 빨강 = 전체 mismatch</i></sub>
 </p>
 
 목록에서 행을 선택하고 **복원 / Restore** 클릭.
@@ -118,6 +126,8 @@
 
 <p align="center">
   <img src="docs/assets/screenshots/auto-restore.png" width="720" alt="Auto-restore on boot" />
+  <br/>
+  <sub><i>부팅 자동 복구 — 레이아웃·모드·지연시간을 골라 작업 스케줄러에 등록</i></sub>
 </p>
 
 **부팅 자동 복구 / Auto-restore on boot** 섹션에서:
