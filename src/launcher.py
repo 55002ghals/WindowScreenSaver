@@ -158,6 +158,7 @@ def ensure_apps_running(
         proc = launch_app(exe, cwd=w.get("cwd", ""), is_uwp=w.get("is_uwp", False), args_list=extra)
         if proc is not None:
             launched_total += 1
+            logger.info("ensure_apps (ctx): launched pid=%s exe=%s", proc.pid, exe)
 
     # Standard deficit-based logic for windows without app_context
     exe_to_saved: dict[str, list[dict]] = {}

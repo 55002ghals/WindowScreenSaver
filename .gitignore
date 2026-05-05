@@ -17,3 +17,5 @@ requirements-dev.txt
 PLAN.md
 pytest.ini
 CLAUDE.md
+tools/dump_uia_chrome.py
+Task-20-uia-dump.txt
