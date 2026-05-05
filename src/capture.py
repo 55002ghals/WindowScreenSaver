@@ -182,6 +182,10 @@ def list_current_windows() -> list[dict]:
                 "is_topmost": False,
                 "is_uwp": is_uwp,
             }
+            from src.app_context import capture_for
+            ctx = capture_for(exe_path, hwnd)
+            if ctx is not None:
+                entry["app_context"] = ctx
             results.append(entry)
             logger.debug(
                 "hwnd=0x%x exe=%s title='%s' state=%s rect=%s",

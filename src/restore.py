@@ -231,22 +231,59 @@ def restore_layout(
     # Sort by z_order descending (back to front) so final z-order is correct
     sorted_saved = sorted(saved_windows, key=lambda w: w.get("z_order", 0), reverse=True)
 
+    # Split: app_context windows are always freshly launched and matched by new hwnd
+    saved_with_ctx    = [w for w in sorted_saved if "app_context" in w]
+    saved_without_ctx = [w for w in sorted_saved if "app_context" not in w]
+
     launched_count = 0
     if running_windows is None:
         from src.launcher import ensure_apps_running
         from src.capture import list_current_windows
-        running_windows = list_current_windows()
+
+        # Snapshot existing hwnds before launch (to detect newly created windows later)
+        pre_launch_windows = list_current_windows()
+        pre_launch_hwnds = {w["hwnd"] for w in pre_launch_windows}
+
         if not no_launch:
             launched_count = ensure_apps_running(sorted_saved)
             if stabilize_ms > 0:
                 time.sleep(stabilize_ms / 1000.0)
-        running_windows = list_current_windows()  # re-scan (no_launch 시에도 늦게 뜬 창 포착)
 
-    matches = match_windows(sorted_saved, running_windows)
+        running_windows = list_current_windows()
+    else:
+        pre_launch_hwnds = set()
+
+    # --- app_context windows: match by newly appeared hwnd per exe_path ---
+    ctx_matched_pairs: list[tuple[dict, dict]] = []
+    if saved_with_ctx and not no_launch:
+        new_windows = [w for w in running_windows if w["hwnd"] not in pre_launch_hwnds]
+        # Group new windows by exe_path (lower) in appearance order
+        from collections import defaultdict
+        new_by_exe: dict[str, list[dict]] = defaultdict(list)
+        for w in new_windows:
+            new_by_exe[w.get("exe_path", "").lower()].append(w)
+
+        for saved in saved_with_ctx:
+            exe_lower = saved.get("exe_path", "").lower()
+            candidates = new_by_exe.get(exe_lower, [])
+            if candidates:
+                matched_running = candidates.pop(0)
+                ok = restore_placement(matched_running["hwnd"], saved["placement"])
+                ctx_matched_pairs.append((saved, matched_running))
+                logger.info(
+                    "ctx-matched '%s' → hwnd=0x%x ok=%s",
+                    saved.get("title_snapshot", exe_lower), matched_running["hwnd"], ok,
+                )
+            else:
+                logger.warning("ctx: no new window found for %s", exe_lower)
+
+    # --- non-app_context windows: existing score-based matching ---
+    matches = match_windows(saved_without_ctx, running_windows)
 
     restored = 0
-    failed = 0
-    matched_pairs: list[tuple[dict, dict]] = []  # all matched windows (success and fail)
+    failed = len(saved_with_ctx) - len(ctx_matched_pairs)  # ctx windows with no match
+
+    matched_pairs: list[tuple[dict, dict]] = list(ctx_matched_pairs)
     for saved, running in matches:
         if running is None:
             failed += 1
@@ -258,10 +295,10 @@ def restore_layout(
         else:
             failed += 1
 
+    restored += len(ctx_matched_pairs)
+
     # Post-settle re-apply: some apps (Chrome/Electron) process WM_WINDOWPOSCHANGED
     # asynchronously and restore their own position 1-2 s after SetWindowPos.
-    # Others (Chrome on startup) temporarily ignore SetWindowPos while loading
-    # their saved state, then become receptive after fully initializing.
     # We wait, then re-apply ALL matched windows regardless of first-pass outcome.
     if post_settle_ms > 0 and matched_pairs:
         logger.info("post-settle: waiting %dms then re-applying %d placement(s)", post_settle_ms, len(matched_pairs))

@@ -37,6 +37,9 @@ class WinLayoutSaverApp(tk.Tk):
         self._log_queue: queue.Queue = queue.Queue()
         setup_logging(enable_gui_handler=True, gui_queue=self._log_queue, debug_enabled=debug_enabled)
 
+        from src.storage import purge_legacy_layouts
+        self._purged_legacy_count = purge_legacy_layouts()
+
         lang = config.get("ui", {}).get("language", "ko")
         set_language(lang)
 
@@ -48,6 +51,8 @@ class WinLayoutSaverApp(tk.Tk):
 
         self._build_ui()
         self._refresh_layouts()
+        if self._purged_legacy_count > 0:
+            self._status_var.set(t("legacy_layouts_purged_status", n=self._purged_legacy_count))
         self._drain_log_queue()
         self._poll_monitors()
         self._migrate_existing_task()

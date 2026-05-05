@@ -48,6 +48,10 @@ STRINGS = {
         "debug_logging_label": "디버그 로깅",
         "debug_logging_on_status": "디버그 로깅 활성화 (DEBUG 이상 기록)",
         "debug_logging_off_status": "디버그 로깅 비활성화 (WARNING 이상만 기록)",
+        "legacy_layouts_purged_status": "기존 레이아웃 {n}개 삭제 (스키마 업그레이드)",
+        "capturing_browser_status": "브라우저 탭 캡처 중... (잠시 깜빡임 발생)",
+        "capture_browser_failed_status": "브라우저 탭 캡처 실패 — URL 없이 저장됨",
+        "restoring_browser_status": "브라우저 창 복원 중...",
     },
     "en": {
         "app_title": "WinLayoutSaver",
@@ -98,6 +102,10 @@ STRINGS = {
         "debug_logging_label": "Debug logging",
         "debug_logging_on_status": "Debug logging enabled (DEBUG and above)",
         "debug_logging_off_status": "Debug logging disabled (WARNING and above only)",
+        "legacy_layouts_purged_status": "Purged {n} legacy layouts (schema upgrade)",
+        "capturing_browser_status": "Capturing browser tabs... (brief flicker)",
+        "capture_browser_failed_status": "Browser tab capture failed — saved without URLs",
+        "restoring_browser_status": "Restoring browser windows...",
     },
 }
 
